@@ -1,0 +1,53 @@
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from qdrant_client import AsyncQdrantClient
+from redis.asyncio import Redis
+from sqlalchemy import text
+
+from app.core.config import settings
+from app.core.logging import setup_logging
+from app.db.base import Base
+from app.db.session import create_db_engine, create_session_factory
+from app.models import opportunity as _opportunity  # noqa: F401
+from app.services.cache import CacheService
+from app.services.vector import VectorService
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    setup_logging()
+    logger.info("Starting %s (%s)", settings.app_name, settings.app_env)
+
+    app.state.db_engine = create_db_engine()
+    app.state.db_session_factory = create_session_factory(app.state.db_engine)
+
+    app.state.redis = Redis.from_url(settings.redis_url, decode_responses=True)
+    app.state.cache = CacheService(app.state.redis)
+
+    app.state.qdrant = AsyncQdrantClient(
+        host=settings.qdrant_host,
+        port=settings.qdrant_port,
+        grpc_port=settings.qdrant_grpc_port,
+        prefer_grpc=False,
+    )
+    app.state.vector = VectorService(app.state.qdrant)
+
+    async with app.state.db_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    async with app.state.db_engine.connect() as conn:
+        await conn.execute(text("SELECT 1"))
+    await app.state.cache.ping()
+    await app.state.vector.ensure_system_collection()
+    logger.info("Connected to postgres, redis, and qdrant")
+
+    yield
+
+    logger.info("Shutting down %s", settings.app_name)
+    await app.state.qdrant.close()
+    await app.state.redis.aclose()
+    await app.state.db_engine.dispose()
