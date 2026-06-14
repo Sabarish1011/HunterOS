@@ -11,8 +11,7 @@ from app.core.config import settings
 from app.core.logging import setup_logging
 from app.db.base import Base
 from app.db.session import create_db_engine, create_session_factory
-from app.models import asset as _asset
-from app.models import opportunity as _opportunity
+from app.models import opportunity as _opportunity  # noqa: F401
 from app.services.cache import CacheService
 from app.services.vector import VectorService
 

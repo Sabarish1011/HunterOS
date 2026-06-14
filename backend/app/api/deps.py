@@ -5,7 +5,10 @@ from qdrant_client import AsyncQdrantClient
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.repositories.asset import AssetRepository
 from app.repositories.opportunity import OpportunityRepository
+
+from app.services.asset import AssetService
 from app.services.cache import CacheService
 from app.services.opportunity import OpportunityService
 from app.services.vector import VectorService
@@ -13,6 +16,7 @@ from app.services.vector import VectorService
 
 async def get_db(request: Request) -> AsyncIterator[AsyncSession]:
     session_factory = request.app.state.db_session_factory
+
     async with session_factory() as session:
         yield session
 
@@ -36,4 +40,14 @@ def get_vector(request: Request) -> VectorService:
 async def get_opportunity_service(
     session: AsyncSession = Depends(get_db),
 ) -> OpportunityService:
-    return OpportunityService(OpportunityRepository(session))
+    return OpportunityService(
+        OpportunityRepository(session)
+    )
+
+
+async def get_asset_service(
+    session: AsyncSession = Depends(get_db),
+) -> AssetService:
+    return AssetService(
+        AssetRepository(session)
+    )
