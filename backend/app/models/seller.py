@@ -9,8 +9,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 
-class Asset(Base):
-    __tablename__ = "assets"
+class Seller(Base):
+    __tablename__ = "sellers"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -23,29 +23,33 @@ class Asset(Base):
         nullable=False,
     )
 
-    brand: Mapped[str] = mapped_column(
+    phone: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+    email: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=False,
+        nullable=True,
     )
 
-    model: Mapped[str] = mapped_column(
+    location: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=False,
+        nullable=True,
     )
 
-    category: Mapped[str] = mapped_column(
-        String(255),
+    trust_score: Mapped[Decimal] = mapped_column(
+        Numeric(5, 2),
         nullable=False,
+        default=Decimal("50"),
+        server_default="50",
     )
 
-    condition: Mapped[str] = mapped_column(
-        String(100),
+    distress_score: Mapped[Decimal] = mapped_column(
+        Numeric(5, 2),
         nullable=False,
-    )
-
-    market_value: Mapped[Decimal] = mapped_column(
-        Numeric(12, 2),
-        nullable=False,
+        default=Decimal("50"),
+        server_default="50",
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -56,12 +60,12 @@ class Asset(Base):
 
     listings: Mapped[list["Listing"]] = relationship(
         "Listing",
-        back_populates="asset",
+        back_populates="seller",
     )
 
     opportunities: Mapped[list["Opportunity"]] = relationship(
         "Opportunity",
-        back_populates="asset",
+        back_populates="seller",
     )
 
     @property

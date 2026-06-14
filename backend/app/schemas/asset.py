@@ -37,4 +37,6 @@ class AssetResponse(BaseModel):
     category: str
     condition: str
     market_value: Decimal
+    listing_ids: list[UUID]
+    opportunity_ids: list[UUID]
     created_at: datetime

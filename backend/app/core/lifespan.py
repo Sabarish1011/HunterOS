@@ -12,7 +12,9 @@ from app.core.logging import setup_logging
 from app.db.base import Base
 from app.db.session import create_db_engine, create_session_factory
 from app.models import asset as _asset
+from app.models import listing as _listing
 from app.models import opportunity as _opportunity
+from app.models import seller as _seller
 from app.services.cache import CacheService
 from app.services.vector import VectorService
 

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, status
 from app.api.deps import get_opportunity_service
 from app.schemas.opportunity import (
     OpportunityCreate,
+    OpportunityAnalysisResponse,
     OpportunityResponse,
     OpportunityUpdate,
 )
@@ -26,6 +27,14 @@ async def get_opportunity(
     service: OpportunityService = Depends(get_opportunity_service),
 ) -> OpportunityResponse:
     return await service.get_opportunity(opportunity_id)
+
+
+@router.get("/{opportunity_id}/analysis", response_model=OpportunityAnalysisResponse)
+async def analyze_opportunity(
+    opportunity_id: UUID,
+    service: OpportunityService = Depends(get_opportunity_service),
+) -> OpportunityAnalysisResponse:
+    return await service.analyze_opportunity(opportunity_id)
 
 
 @router.post("", response_model=OpportunityResponse, status_code=status.HTTP_201_CREATED)

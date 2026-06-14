@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models.asset import Asset
 from app.schemas.asset import AssetCreate, AssetUpdate
@@ -12,11 +13,24 @@ class AssetRepository:
         self._session = session
 
     async def get_by_id(self, asset_id: UUID) -> Asset | None:
-        return await self._session.get(Asset, asset_id)
+        result = await self._session.execute(
+            select(Asset)
+            .options(
+                selectinload(Asset.listings),
+                selectinload(Asset.opportunities),
+            )
+            .where(Asset.id == asset_id)
+        )
+        return result.scalar_one_or_none()
 
     async def list_all(self) -> list[Asset]:
         result = await self._session.execute(
-            select(Asset).order_by(Asset.created_at.desc())
+            select(Asset)
+            .options(
+                selectinload(Asset.listings),
+                selectinload(Asset.opportunities),
+            )
+            .order_by(Asset.created_at.desc())
         )
         return list(result.scalars().all())
 
